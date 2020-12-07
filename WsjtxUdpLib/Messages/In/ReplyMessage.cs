@@ -1,4 +1,7 @@
-﻿using System;
+﻿using M0LTE.WsjtxUdpLib.Messages.Out;
+using System;
+using System.Text;
+using System.IO;
 
 namespace M0LTE.WsjtxUdpLib.Messages
 {
@@ -43,8 +46,42 @@ namespace M0LTE.WsjtxUdpLib.Messages
      *          Group switch    0x40  X11 only
      */
 
-    public class ReplyMessage : IWsjtxCommandMessageGenerator
+    public class ReplyMessage : WsjtxMessage, IWsjtxCommandMessageGenerator
     {
-        public byte[] GetBytes() => throw new NotImplementedException();
+        public int SchemaVersion { get; set; }
+        public string Id { get; set; }
+         public TimeSpan SinceMidnight { get; set; }
+        public int Snr { get; set; }
+        public double DeltaTime { get; set; }
+        public int DeltaFrequency { get; set; }
+        public string Mode { get; set; }
+        public string Message { get; set; }
+        public bool LowConfidence { get; set; }
+        public byte Modifiers { get; set; }
+
+
+        public byte[] GetBytes()
+        {
+            using (MemoryStream m = new MemoryStream())
+            {
+                using (BinaryWriter writer = new BinaryWriter(m))
+                {
+                    writer.Write(WsjtxMessage.MAGIC_NUMBER);
+                    writer.Write(EncodeQUInt32((UInt32)SchemaVersion));
+                    writer.Write(EncodeQUInt32(4));    //msg type
+                    writer.Write(EncodeString(Id));
+                    writer.Write(EncodeQTime(SinceMidnight));
+                    writer.Write(EncodeQInt32(Snr));
+                    writer.Write(EncodeDouble(DeltaTime));
+                    writer.Write(EncodeQUInt32((UInt32)DeltaFrequency));
+                    writer.Write(EncodeString(Mode));
+                    writer.Write(EncodeString(Message));
+                    writer.Write(EncodeBoolean(LowConfidence));
+                    writer.Write(Modifiers);
+               }
+                return m.ToArray();
+            }
+        }
+        public override string ToString() => $"Reply     {this.ToCompactLine(nameof(Id))}";
     }
 }

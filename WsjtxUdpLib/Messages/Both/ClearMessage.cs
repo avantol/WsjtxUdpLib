@@ -1,5 +1,7 @@
-﻿using M0LTE.WsjtxUdpLib.Messages.Out;
+﻿using M0LTE.WsjtxUdpLib.Messages;
+using M0LTE.WsjtxUdpLib.Messages.Out;
 using System;
+using System.IO;
 
 namespace M0LTE.WsjtxUdpLib.Messages.Both
 {
@@ -27,8 +29,28 @@ namespace M0LTE.WsjtxUdpLib.Messages.Both
 
     public class ClearMessage : WsjtxMessage, IWsjtxCommandMessageGenerator
     {
+        public int SchemaVersion { get; set; }
+        public string Id { get; set; }
+        public byte Window { get; set; }
+
         public static new WsjtxMessage Parse(byte[] message) => new ClearMessage();
 
-        public byte[] GetBytes() => throw new NotImplementedException();
+
+        public byte[] GetBytes()
+        {
+            using (MemoryStream m = new MemoryStream())
+            {
+                using (BinaryWriter writer = new BinaryWriter(m))
+                {
+                    writer.Write(WsjtxMessage.MAGIC_NUMBER);
+                    writer.Write(EncodeQUInt32((UInt32)SchemaVersion));
+                    writer.Write(EncodeQUInt32(3));    //msg type
+                    writer.Write(EncodeString(Id));
+                    writer.Write(Window);
+                }
+                return m.ToArray();
+            }
+        }
+        public override string ToString() => $"Clear     {this.ToCompactLine(nameof(Id))}";
     }
 }

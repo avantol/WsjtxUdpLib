@@ -1,5 +1,6 @@
 ﻿using M0LTE.WsjtxUdpLib.Messages.Out;
 using System;
+using System.IO;
 
 namespace M0LTE.WsjtxUdpLib.Messages
 {
@@ -73,6 +74,22 @@ namespace M0LTE.WsjtxUdpLib.Messages
 
         public override string ToString() => $"Heartbeat id:{Id} maxSchemaNumber:{MaxSchemaNumber} version:{Version} revision:{Revision}";
 
-        public byte[] GetBytes() => throw new NotImplementedException();
+        public byte[] GetBytes()
+        {
+            using (MemoryStream m = new MemoryStream())
+            {
+                using (BinaryWriter writer = new BinaryWriter(m))
+                {
+                    writer.Write(WsjtxMessage.MAGIC_NUMBER);
+                    writer.Write(EncodeQUInt32((UInt32)SchemaVersion));
+                    writer.Write(EncodeQUInt32(0));    //msg type
+                    writer.Write(EncodeString(Id));
+                    writer.Write(EncodeQUInt32((UInt32)MaxSchemaNumber));
+                    writer.Write(EncodeString(Version));
+                    writer.Write(EncodeString(Revision));
+                }
+                return m.ToArray();
+            }
+        }
     }
 }

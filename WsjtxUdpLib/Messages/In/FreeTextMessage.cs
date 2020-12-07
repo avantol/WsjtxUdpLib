@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 
 namespace M0LTE.WsjtxUdpLib.Messages
 {
@@ -34,8 +35,31 @@ namespace M0LTE.WsjtxUdpLib.Messages
      *      message.
      */
 
-    public class FreeTextMessage : IWsjtxCommandMessageGenerator
+    public class FreeTextMessage : WsjtxMessage, IWsjtxCommandMessageGenerator
     {
-        public byte[] GetBytes() => throw new NotImplementedException();
+        public int SchemaVersion { get; set; }
+        public string Id { get; set; }
+        public byte Window { get; set; }
+        public string Text { get; set; }
+        public bool Send { get; set; }
+
+
+        public byte[] GetBytes()
+        {
+            using (MemoryStream m = new MemoryStream())
+            {
+                using (BinaryWriter writer = new BinaryWriter(m))
+                {
+                    writer.Write(WsjtxMessage.MAGIC_NUMBER);
+                    writer.Write(WsjtxMessage.EncodeQUInt32((UInt32)SchemaVersion));
+                    writer.Write(EncodeQUInt32(9));    //msg type
+                    writer.Write(EncodeString(Id));
+                    writer.Write(EncodeString(Text));
+                    writer.Write(EncodeBoolean(Send));
+                }
+                return m.ToArray();
+            }
+        }
+        public override string ToString() => $"FreeText  {this.ToCompactLine(nameof(Id))}";
     }
 }

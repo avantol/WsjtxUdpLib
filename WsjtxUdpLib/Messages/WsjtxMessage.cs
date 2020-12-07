@@ -308,6 +308,41 @@ namespace M0LTE.WsjtxUdpLib.Messages
             return result;
         }
 
+        //Encoding routines
+        protected static byte[] EncodeQInt32(Int32 i)
+        {
+            return BitConverter.GetBytes(i).Reverse().ToArray();
+        }
+
+        protected static byte[] EncodeQUInt32(UInt32 i)
+        {
+            return BitConverter.GetBytes(i).Reverse().ToArray();
+        }
+
+        protected static byte[] EncodeString(String s)
+        {
+            byte[] ba = new byte[s.Length + 4];
+            EncodeQUInt32((UInt32)s.Length).CopyTo(ba, 0);
+            Encoding.UTF8.GetBytes(s).CopyTo(ba, 4);
+            return ba;
+        }
+
+        protected static byte EncodeBoolean(bool b)
+        {
+            return b ? (byte)1 : (byte)0;
+        }
+
+        protected static byte[] EncodeQTime(TimeSpan ts)
+        {
+            return EncodeQUInt32((UInt32)ts.TotalMilliseconds);
+        }
+        protected static byte[] EncodeDouble(double d)
+        {
+            return BitConverter.GetBytes(d).Reverse().ToArray();
+        }
+
+
+
         /// <summary>
         /// Converts a Julian day to a calendar DateTime.
         /// https://stackoverflow.com/a/52340035/17971

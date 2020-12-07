@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 
 namespace M0LTE.WsjtxUdpLib.Messages
 {
@@ -12,8 +13,25 @@ namespace M0LTE.WsjtxUdpLib.Messages
      *      using this message.
      */
 
-    public class HaltTxMessage : IWsjtxCommandMessageGenerator
+    public class HaltTxMessage : WsjtxMessage, IWsjtxCommandMessageGenerator
     {
-        public byte[] GetBytes() => throw new NotImplementedException();
+        public UInt32 SchemaVersion { get; set; }
+        public string Id { get; set; }
+        public bool AutoOnly { get; set; }
+        public byte[] GetBytes()
+        {
+            using (MemoryStream m = new MemoryStream())
+            {
+                using (BinaryWriter writer = new BinaryWriter(m))
+                {
+                    writer.Write(WsjtxMessage.MAGIC_NUMBER);
+                    writer.Write(EncodeQUInt32(SchemaVersion));
+                    writer.Write(EncodeQUInt32(8));    //msg type
+                    writer.Write(EncodeString(Id));
+                    writer.Write(EncodeBoolean(AutoOnly));
+                }
+                return m.ToArray();
+            }
+        }
     }
 }
